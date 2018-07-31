@@ -1,0 +1,166 @@
+﻿@using System.Web.Mvc.Html
+
+<div class="container fill">
+    <h2>Store Management System</h2>
+    <br />
+    <div class="row">
+        <div id="status-panel" class="alert alert-dismissable status-panel">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <div id="status-message"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <button type="button" id="btnAddStoreItem" class="btn btn-default">Add Store Item</button>
+        </div>
+        <div class="col-md-5">
+        </div>
+        <div class="col-md-3">
+            <div class="input-group stylish-input-group">
+                <input id="search" type="text" class="form-control" placeholder="Search for...">
+                <span class="input-group-addon">
+                    <button id="btnSearch" type="submit">
+                        <span class="glyphicon glyphicon-search"></span>
+                    </button>
+                </span>
+            </div>
+        </div>
+</div>
+<br />
+<table id="grid" data-source="@Url.Action("GetStoreItems")"></table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="storeItemModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">New Store Item</h4>
+            </div>
+            <div class="modal-body">
+                @Html.Partial("_SaveStoreItem", new StoreManagementSystem.Models.StoreItemViewModel())
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    @*@Scripts.Render("~/bundles/jqueryval")*@
+
+    <script type="text/javascript">
+        var grid;
+        function Add() {
+            $("#myModalLabel").text("New Store Item");
+            $("#btnSave").val("Add & Close");
+
+            $("#StoreItemID").val("");
+            $("#ItemName").val("");
+            $("#ItemCost").val("");
+            $("#storeItemModal").modal("show");
+        }
+        function Edit(e) {
+            $("#myModalLabel").text("Update Store Item");
+            $("#btnSave").val("Save & Close");
+
+            $("#StoreItemID").val(e.data.id);
+            $("#ItemName").val(e.data.record.ItemName);
+            $("#ItemCost").val(e.data.record.ItemCost);
+            $("#storeItemModal").modal("show");
+        }
+
+        function Remove(e) {
+            $.ajax({ url: "Home/Remove", type: "POST", data: { id: e.data.id } })
+                .done(function () {
+                    grid.reload();
+                    ShowMessageBar("success", "Store item deleted successfully!");
+                })
+                .fail(function () {
+                    ShowMessageBar("error", "Unable to delete store item.");
+                });
+        }
+        function Search() {
+            grid.reload({ searchString: $("#search").val() });
+        }
+
+        function OnSuccess(response) {
+            grid.reload();
+            ShowMessageBar("success", "Store item details saved successfully!");
+            $("#storeItemModal").modal("hide");
+        }
+
+        function OnFailure(response) {
+            ShowMessageBar("error", "Unable to save store item.");
+        }
+
+        $(document).ready(function () {
+            grid = $("#grid").grid({
+                dataKey: "StoreItemID",
+                uiLibrary: "bootstrap",
+                columns: [
+                    { field: "ItemName", title: "Item Name", sortable: true },
+                    { field: "ItemCost", title: "Item Cost", sortable: true },
+                    { field: "CreatedDate", title: "Created Date", sortable: true },
+                    { title: "", field: "Delete", width: 34, type: "icon", icon: "glyphicon-remove", tooltip: "Delete", events: { "click": Remove } },
+                     { title: "", field: "Edit", width: 34, type: "icon", icon: "glyphicon-pencil", tooltip: "Edit", events: { "click": Edit } }
+                ],
+                pager: { enable: true, limit: 5, sizes: [2, 5, 10, 20] }
+            });
+            $("#btnAddStoreItem").on("click", Add);
+            //$("#btnSave").on("click", Save);
+            $("#btnSearch").on("click", Search);
+            $("#search").on("input", function (e) {
+                if ($(this).data("lastval") != $(this).val()) {
+                    $(this).data("lastval", $(this).val());
+                    Search();
+                };
+            });
+            $("#search").on("keypress", searchEnterKey);
+        });
+
+        function searchEnterKey(e) {
+            var code = e.keyCode || e.which;
+            if (code == 13) { //Enter keycode
+                search();
+            }
+        }
+
+        function ShowMessageBar(type, message, callbackMethod) {
+            if (message !== "") {
+                $("#status-message").text(message);
+                if (type == "success") {
+                    $("#status-panel").addClass("alert-success").fadeIn();
+                }
+                else if (type == "error") {
+                    $("#status-panel").addClass("alert-danger").fadeIn();
+                }
+                else if (type == "info") {
+                    $("#status-panel").addClass("alert-info").fadeIn();
+                }
+                else if (type == "warning") {
+                    $("#status-panel").addClass("alert-warning").fadeIn();
+                }
+
+                if (callbackMethod != null && typeof callbackMethod === 'function') {
+                    callbackMethod();
+                }
+
+                setTimeout(HideMessageBar, 10000, null);
+            }
+        }
+
+        function HideMessageBar(callbackMethod) {
+            var panel = $("#status-panel");
+            panel.fadeOut("slow");
+            panel.removeClass("alert-success");
+            panel.removeClass("alert-danger");
+            panel.removeClass("alert-warning");
+            panel.removeClass("alert-info");
+
+            if (callbackMethod != null && typeof callbackMethod === 'function') {
+                callbackMethod();
+            }
+        }
+    </script>
+}

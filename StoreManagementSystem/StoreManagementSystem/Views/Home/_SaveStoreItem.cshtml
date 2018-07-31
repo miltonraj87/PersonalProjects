@@ -1,0 +1,32 @@
+﻿@model StoreManagementSystem.Models.StoreItemViewModel
+
+<div id="pnlStatus">
+
+</div>
+
+@using (Ajax.BeginForm("SaveStoreItem","Home", "", new AjaxOptions { UpdateTargetId = "pnlStatus", OnSuccess = "OnSuccess", OnFailure = "OnFailure" }, new { @id = "frmStoreItem", @class = "form-horizontal" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+             
+    @Html.HiddenFor(m => m.StoreItemID)
+    <div class="form-group">
+        @Html.LabelFor(m => m.ItemName, new { @class = "control-label col-sm-3" })
+        <div class="col-sm-9">
+            @Html.TextBoxFor(model => model.ItemName, "", new { @class = "form-control", @placeholder = "Enter Item Name" })
+            @Html.ValidationMessageFor(model => model.ItemName)
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(m => m.ItemCost, new { @class = "control-label col-sm-3" })
+        <div class="col-sm-9">
+            @Html.TextBoxFor(model => model.ItemCost, "", new { @class = "form-control", @placeholder = "Enter Item Cost", @type = "number", @min = "1", @step = "1.00" })
+            @Html.ValidationMessageFor(model => model.ItemCost)
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-3 pull-right">
+            <input type="submit" class="btn btn-primary" id="btnSave" value="Add & Close" />
+        </div>
+    </div>
+}
